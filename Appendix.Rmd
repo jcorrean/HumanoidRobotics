@@ -1,0 +1,83 @@
+---
+title: "Humanoid Robotics: Bibliometric Analysis"
+author: "Juan C. Correa"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    number_sections: true
+---
+
+# Introduction
+
+This document presents a reproducible bibliometric analysis of humanoid robotics using a SAAS-compliant workflow (Search–Appraisal–Analysis–Synthesis). All analyses are implemented using the `bibliometrix` package in R.
+
+---
+
+# Setup
+
+```{r setup, message=FALSE, warning=FALSE}
+library(bibliometrix)
+set.seed(1234)
+M <- convert2df("Humanoid.txt", dbsource = "wos", format = "plaintext")
+
+M <- metaTagExtraction(M, Field = "AU_CO", sep = ";")
+
+M$DE <- gsub("-", " ", M$DE)
+M$DE <- trimws(tolower(M$DE))
+M <- M[!is.na(M$DE), ]
+
+my_synonyms <- c(
+ "humanoid robots" = "humanoid robot",
+ "human robot interaction" = "human-robot interaction",
+ "bipedal locomotion" = "legged locomotion",
+ "walking" = "legged locomotion",
+ "humanoid robotss" = "humanoid robot",
+ "robots" = "robot")
+
+for(i in names(my_synonyms)){
+ M$DE <- gsub(i, my_synonyms[i], M$DE)
+}
+
+years <- c(2013, 2018, 2021, 2024)
+
+nexus <- thematicEvolution(
+ M,
+ field = "DE",
+ years = years,
+ n = 120,
+ minFreq = 5
+)
+```
+
+```{r thematic-evolution, fig.dim=c(3, 1.5), dpi=300}
+plotThematicEvolution(nexus$Nodes, nexus$Edges)
+```
+
+```{r}
+
+my_synonyms <- c(
+ "humanoid robots" = "humanoid robot",
+ "human robot interaction" = "human-robot interaction",
+ "bipedal locomotion" = "legged locomotion",
+ "walking" = "legged locomotion",
+ "humanoid robotss" = "humanoid robot"
+)
+
+
+NetMatrix <- biblioNetwork(
+  M,
+  analysis = "collaboration",
+  network = "countries",
+  sep = ";"
+)
+
+networkPlot(NetMatrix,
+            n = 50,
+            type = "fruchterman",
+            cluster = "louvain")
+
+
+```
+
